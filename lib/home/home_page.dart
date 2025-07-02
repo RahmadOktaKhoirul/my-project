@@ -1,63 +1,68 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:login_test/login/login_page.dart'; // ganti path sesuai struktur foldermu
 
-class HomePage extends StatelessWidget {
+import 'package:login_test/home/navbar/dashboard.dart';
+import 'package:login_test/home/navbar/explore.dart';
+import 'package:login_test/home/navbar/profile.dart';
+import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
+
+/// ---------------------------------------------------------------------------
+///  HOME PAGE  –  dengan Persistent Bottom Nav Bar 6.2.1
+/// ---------------------------------------------------------------------------
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  late final PersistentTabController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = PersistentTabController(initialIndex: 0);
+  }
+
+  /* --------------------- Bottom‑bar items & screens ---------------------- */
+
+  List<Widget> _buildScreens() => const [
+    DashboardScreen(),
+    ExploreScreen(),
+    ProfileScreen(),
+  ];
+
+  List<PersistentBottomNavBarItem> _navBarsItems() => [
+    PersistentBottomNavBarItem(
+      icon: const Icon(Icons.home),
+      title: 'Home',
+      activeColorPrimary: Colors.purple,
+      inactiveColorPrimary: Colors.grey,
+    ),
+    PersistentBottomNavBarItem(
+      icon: const Icon(Icons.search),
+      title: 'Explore',
+      activeColorPrimary: Colors.purple,
+      inactiveColorPrimary: Colors.grey,
+    ),
+    PersistentBottomNavBarItem(
+      icon: const Icon(Icons.person),
+      title: 'Profile',
+      activeColorPrimary: Colors.purple,
+      inactiveColorPrimary: Colors.grey,
+    ),
+  ];
+
+  @override
   Widget build(BuildContext context) {
-    // Mendapatkan user yang sedang login
-    final user = FirebaseAuth.instance.currentUser!;
-    final nama = (user.displayName?.isNotEmpty ?? false)
-        ? user.displayName!
-        : (user.email ?? 'Pengguna');
-
-    Future<void> logout() async {
-      await FirebaseAuth.instance.signOut();
-      if (context.mounted) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => const LoginPage()),
-          (_) => false,
-        );
-      }
-    }
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Halo, $nama'),
-        actions: [
-          IconButton(
-            tooltip: 'Logout',
-            icon: const Icon(Icons.logout),
-            onPressed: logout,
-          ),
-        ],
-      ),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Selamat datang, $nama!',
-              style: const TextStyle(fontSize: 24),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              onPressed: logout,
-              icon: const Icon(Icons.logout),
-              label: const Text('Logout'),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+    return PersistentTabView(
+      context,
+      controller: _controller,
+      screens: _buildScreens(),
+      items: _navBarsItems(),
+      navBarStyle: NavBarStyle.style9, // gaya bawaan (coba ubah sesuka hati)
+      backgroundColor: Colors.black, // cocok dg tema gelap
+      confineToSafeArea: true,
     );
   }
 }

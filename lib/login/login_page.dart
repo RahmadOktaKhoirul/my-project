@@ -101,21 +101,32 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              // Header image
-              Image.asset(
-                'assets/images/images_login.jpg',
-                width: double.infinity,
-                height: 200,
-                fit: BoxFit.fitWidth,
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // Header image
+            Container(
+              height: 200,
+              width: MediaQuery.of(context).size.width,
+              decoration: const BoxDecoration(
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(40),
+                ),
+                image: DecorationImage(
+                  image: AssetImage('assets/images/images_login.jpg'),
+                  fit: BoxFit.fitWidth,
+                ),
               ),
-              const SizedBox(height: 30),
-
-              // Form
-              Padding(
+            ),
+            const SizedBox(height: 30),
+            // Form
+            Container(
+              margin: EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+                color: const Color.fromARGB(255, 27, 27, 27),
+              ),
+              child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   children: [
@@ -123,7 +134,9 @@ class _LoginPageState extends State<LoginPage> {
                     TextField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
-                      style: const TextStyle(color: Colors.purple),
+                      style: const TextStyle(
+                        color: Color.fromARGB(255, 242, 167, 255),
+                      ),
                       decoration: const InputDecoration(
                         labelText: 'Email',
                         border: OutlineInputBorder(),
@@ -135,7 +148,9 @@ class _LoginPageState extends State<LoginPage> {
                     TextField(
                       controller: _passController,
                       obscureText: _obscurePass,
-                      style: const TextStyle(color: Colors.purple),
+                      style: const TextStyle(
+                        color: Color.fromARGB(255, 242, 167, 255),
+                      ),
                       decoration: InputDecoration(
                         labelText: 'Password',
                         border: const OutlineInputBorder(),
@@ -162,7 +177,7 @@ class _LoginPageState extends State<LoginPage> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.purple,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(25),
+                            borderRadius: BorderRadius.circular(5),
                           ),
                         ),
                         child: _loading
@@ -174,24 +189,17 @@ class _LoginPageState extends State<LoginPage> {
                                     height: 18,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      color: Colors.black,
+                                      color: Colors.white54,
                                     ),
                                   ),
                                   SizedBox(width: 12),
-                                  Text(
-                                    'Login',
-                                    style: TextStyle(
-                                      fontSize: 25,
-                                      color: Colors.black,
-                                    ),
-                                  ),
                                 ],
                               )
                             : const Text(
                                 'Login',
                                 style: TextStyle(
-                                  fontSize: 25,
-                                  color: Colors.black,
+                                  fontSize: 20,
+                                  color: Colors.white,
                                 ),
                               ),
                       ),
@@ -225,8 +233,8 @@ class _LoginPageState extends State<LoginPage> {
                   ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
