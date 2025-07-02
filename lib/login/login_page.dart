@@ -1,89 +1,223 @@
 import 'package:flutter/material.dart';
-import 'package:login_test/login/Signup_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
+import 'package:login_test/home/home_page.dart';
+import 'package:login_test/login/signup_page.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final _emailController = TextEditingController();
+  final _passController = TextEditingController();
+
+  bool _loading = false;
+  bool _obscurePass = true; // 👁️  status “mata”
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passController.dispose();
+    super.dispose();
+  }
+
+  /* ---------- Utility ---------- */
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Kesalahan'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _firebaseErrorMessage(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'invalid-credential':
+        return 'Email atau Password Salah.';
+      case 'user-not-found':
+        return 'Akun tidak ditemukan.';
+      case 'wrong-password':
+        return 'Password salah.';
+      case 'invalid-email':
+        return 'Format email tidak valid.';
+      case 'user-disabled':
+        return 'Akun ini telah dinonaktifkan.';
+      default:
+        return 'Terjadi kesalahan: ${e.message}';
+    }
+  }
+
+  /* ---------- Action ---------- */
+
+  Future<void> _login() async {
+    final email = _emailController.text.trim();
+    final pass = _passController.text.trim();
+
+    if (email.isEmpty || pass.isEmpty) {
+      return _showErrorDialog('Email dan password harus diisi.');
+    }
+
+    setState(() => _loading = true);
+
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: pass,
+      );
+
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const HomePage()),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      _showErrorDialog(_firebaseErrorMessage(e));
+    } on PlatformException catch (e) {
+      _showErrorDialog('Kesalahan sistem: ${e.message ?? 'tidak diketahui.'}');
+    } catch (e) {
+      _showErrorDialog('Terjadi kesalahan tak terduga: $e');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  /* ---------- UI ---------- */
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+      backgroundColor: Colors.black,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             children: [
-              Container(
+              // Header image
+              Image.asset(
+                'assets/images/images_login.jpg',
+                width: double.infinity,
                 height: 200,
-                width: MediaQuery.of(context).size.width,
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/images_login.jpg'),
-                    fit: BoxFit.fitWidth,
-                  ),
-                ),
+                fit: BoxFit.fitWidth,
               ),
               const SizedBox(height: 30),
 
+              // Form
               Padding(
-                padding: const EdgeInsets.all(20.0),
+                padding: const EdgeInsets.all(20),
                 child: Column(
                   children: [
+                    // Email
                     TextField(
-                      style: TextStyle(color: Colors.purple),
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      style: const TextStyle(color: Colors.purple),
                       decoration: const InputDecoration(
-                        fillColor: Colors.white,
-                        labelText: "Username",
+                        labelText: 'Email',
                         border: OutlineInputBorder(),
                       ),
                     ),
                     const SizedBox(height: 20),
+
+                    // Password + eye icon
                     TextField(
-                      style: TextStyle(color: Colors.purple),
-                      obscureText: true,
-                      decoration: const InputDecoration(
-                        fillColor: Colors.white,
-                        labelText: "Password",
-                        border: OutlineInputBorder(),
+                      controller: _passController,
+                      obscureText: _obscurePass,
+                      style: const TextStyle(color: Colors.purple),
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        border: const OutlineInputBorder(),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePass
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                            color: Colors.purpleAccent,
+                          ),
+                          onPressed: () =>
+                              setState(() => _obscurePass = !_obscurePass),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 30),
+
+                    // Login button
                     SizedBox(
                       width: double.infinity,
                       height: 50,
                       child: ElevatedButton(
-                        onPressed: () {},
+                        onPressed: _loading ? null : _login,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.purple,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(25),
                           ),
                         ),
-                        child: const Text(
-                          "Login",
-                          style: TextStyle(fontSize: 25, color: Colors.black),
-                        ),
+                        child: _loading
+                            ? Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: const [
+                                  SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  SizedBox(width: 12),
+                                  Text(
+                                    'Login',
+                                    style: TextStyle(
+                                      fontSize: 25,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : const Text(
+                                'Login',
+                                style: TextStyle(
+                                  fontSize: 25,
+                                  color: Colors.black,
+                                ),
+                              ),
                       ),
                     ),
                     const SizedBox(height: 20),
+
+                    // Signup link
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Text(
-                          style: TextStyle(color: Colors.white),
                           "Don't have an account?",
+                          style: TextStyle(color: Colors.white),
                         ),
                         TextButton(
                           onPressed: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => SignupPage(),
+                                builder: (_) => const SignupPage(),
                               ),
                             );
                           },
                           child: const Text(
+                            'Create',
                             style: TextStyle(color: Colors.purpleAccent),
-                            "Create",
                           ),
                         ),
                       ],
